@@ -127,7 +127,49 @@ describe('autoDetectProvider', () => {
     expect(autoDetectProvider()).toBe('claude-code-cli');
   });
 
-  it('detects youcom from YDC_API_KEY before the legacy fallback', () => {
+  it('detects youcom from YDC_API_KEY when it is the only key set', () => {
+    delete process.env.OPENAI_API_KEY;
+    delete process.env.OPENROUTER_API_KEY;
+    delete process.env.ANTHROPIC_API_KEY;
+    delete process.env.GEMINI_API_KEY;
+    delete process.env.GROQ_API_KEY;
+    delete process.env.TOGETHER_API_KEY;
+    delete process.env.MISTRAL_API_KEY;
+    delete process.env.XAI_API_KEY;
+    delete process.env.OLLAMA_BASE_URL;
+    delete process.env.STABILITY_API_KEY;
+    delete process.env.REPLICATE_API_TOKEN;
+    delete process.env.YOUCOM_API_KEY;
+    process.env.YDC_API_KEY = 'ydc-only-key';
+
+    expect(autoDetectProvider()).toBe('youcom');
+    // youcom resolves keylessly (the provider reads YDC_API_KEY itself),
+    // so resolution must succeed without throwing.
+    expect(resolveProvider('youcom', 'youcom-search')).toEqual({
+      providerId: 'youcom',
+      modelId: 'youcom-search',
+    });
+  });
+
+  it('detects youcom from the legacy YOUCOM_API_KEY when YDC_API_KEY is unset', () => {
+    delete process.env.OPENAI_API_KEY;
+    delete process.env.OPENROUTER_API_KEY;
+    delete process.env.ANTHROPIC_API_KEY;
+    delete process.env.GEMINI_API_KEY;
+    delete process.env.GROQ_API_KEY;
+    delete process.env.TOGETHER_API_KEY;
+    delete process.env.MISTRAL_API_KEY;
+    delete process.env.XAI_API_KEY;
+    delete process.env.OLLAMA_BASE_URL;
+    delete process.env.STABILITY_API_KEY;
+    delete process.env.REPLICATE_API_TOKEN;
+    delete process.env.YDC_API_KEY;
+    process.env.YOUCOM_API_KEY = 'legacy-only-key';
+
+    expect(autoDetectProvider()).toBe('youcom');
+  });
+
+  it('resolves youcom keylessly when both YDC_API_KEY and the legacy var are set', () => {
     delete process.env.OPENAI_API_KEY;
     delete process.env.OPENROUTER_API_KEY;
     delete process.env.ANTHROPIC_API_KEY;
@@ -143,6 +185,10 @@ describe('autoDetectProvider', () => {
     process.env.YOUCOM_API_KEY = 'legacy-key';
 
     expect(autoDetectProvider()).toBe('youcom');
+    expect(resolveProvider('youcom', 'youcom-search')).toEqual({
+      providerId: 'youcom',
+      modelId: 'youcom-search',
+    });
   });
 });
 
